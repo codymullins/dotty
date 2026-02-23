@@ -29,6 +29,11 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- Ensure the ghostty submodule is initialized before building it -->
+  <Target Name="InitSubmodules" BeforeTargets="BuildGhosttyMac;BuildGhosttyWindows;BuildGhosttyLinux" Condition="!Exists('$(MSBuildProjectDirectory)\..\ghostty_src\build.zig') AND !Exists('$(MSBuildProjectDirectory)/../ghostty_src/build.zig')">
+    <Exec Command="git submodule update --init" WorkingDirectory="$(MSBuildProjectDirectory)\.." />
+  </Target>
+
   <!-- Pre-build steps to compile the native Zig libghostty library -->
   <Target Name="BuildGhosttyMac" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
     <Exec Command="zig build -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)/../ghostty_src" />
@@ -37,9 +42,9 @@
   </Target>
 
   <Target Name="BuildGhosttyWindows" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <Exec Command="zig build -Dtarget=x86_64-windows -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)/../ghostty_src" />
-    <MakeDir Directories="$(MSBuildProjectDirectory)/Native" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../ghostty_src/zig-out/lib/ghostty.dll" DestinationFolder="$(MSBuildProjectDirectory)/Native" />
+    <Exec Command="zig build -Dtarget=x86_64-windows -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)\..\ghostty_src" />
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Native" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\ghostty_src\zig-out\lib\ghostty.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native" />
   </Target>
 
   <Target Name="BuildGhosttyLinux" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
