@@ -32,11 +32,19 @@ public unsafe class GhosttyControl : NativeControlHost
         var topLevel = TopLevel.GetTopLevel(this);
         var scale = topLevel?.RenderScaling ?? 1.0;
 
-        // Create the surface configured for this NSView
         var config = LibGhostty.ghostty_surface_config_new();
-        config.platform_tag = GhosttyPlatformTag.MacOS;
-        config.platform.nsview = handle.Handle;
         config.scale_factor = scale;
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            config.platform_tag = GhosttyPlatformTag.MacOS;
+            config.platform.nsview = handle.Handle;
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            config.platform_tag = GhosttyPlatformTag.Windows;
+            config.platform.hwnd = handle.Handle;
+        }
         
         _surface = LibGhostty.ghostty_surface_new(_app, &config);
 
@@ -157,6 +165,82 @@ public unsafe class GhosttyControl : NativeControlHost
 
     private uint MapAvaloniaKey(Avalonia.Input.Key key)
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Windows Virtual-Key Codes (from Avalonia.Input.Key which roughly maps to them)
+            return key switch
+            {
+                Avalonia.Input.Key.A => 0x41,
+                Avalonia.Input.Key.S => 0x53,
+                Avalonia.Input.Key.D => 0x44,
+                Avalonia.Input.Key.F => 0x46,
+                Avalonia.Input.Key.H => 0x48,
+                Avalonia.Input.Key.G => 0x47,
+                Avalonia.Input.Key.Z => 0x5A,
+                Avalonia.Input.Key.X => 0x58,
+                Avalonia.Input.Key.C => 0x43,
+                Avalonia.Input.Key.V => 0x56,
+                Avalonia.Input.Key.B => 0x42,
+                Avalonia.Input.Key.Q => 0x51,
+                Avalonia.Input.Key.W => 0x57,
+                Avalonia.Input.Key.E => 0x45,
+                Avalonia.Input.Key.R => 0x52,
+                Avalonia.Input.Key.Y => 0x59,
+                Avalonia.Input.Key.T => 0x54,
+                Avalonia.Input.Key.D1 => 0x31,
+                Avalonia.Input.Key.D2 => 0x32,
+                Avalonia.Input.Key.D3 => 0x33,
+                Avalonia.Input.Key.D4 => 0x34,
+                Avalonia.Input.Key.D6 => 0x36,
+                Avalonia.Input.Key.D5 => 0x35,
+                Avalonia.Input.Key.OemPlus => 0xBB,
+                Avalonia.Input.Key.D9 => 0x39,
+                Avalonia.Input.Key.D7 => 0x37,
+                Avalonia.Input.Key.OemMinus => 0xBD,
+                Avalonia.Input.Key.D8 => 0x38,
+                Avalonia.Input.Key.D0 => 0x30,
+                Avalonia.Input.Key.OemCloseBrackets => 0xDD,
+                Avalonia.Input.Key.O => 0x4F,
+                Avalonia.Input.Key.U => 0x55,
+                Avalonia.Input.Key.OemOpenBrackets => 0xDB,
+                Avalonia.Input.Key.I => 0x49,
+                Avalonia.Input.Key.P => 0x50,
+                Avalonia.Input.Key.Enter => 0x0D,
+                Avalonia.Input.Key.L => 0x4C,
+                Avalonia.Input.Key.J => 0x4A,
+                Avalonia.Input.Key.OemQuotes => 0xDE,
+                Avalonia.Input.Key.K => 0x4B,
+                Avalonia.Input.Key.OemSemicolon => 0xBA,
+                Avalonia.Input.Key.OemPipe => 0xDC,
+                Avalonia.Input.Key.OemComma => 0xBC,
+                Avalonia.Input.Key.OemQuestion => 0xBF,
+                Avalonia.Input.Key.N => 0x4E,
+                Avalonia.Input.Key.M => 0x4D,
+                Avalonia.Input.Key.OemPeriod => 0xBE,
+                Avalonia.Input.Key.Tab => 0x09,
+                Avalonia.Input.Key.Space => 0x20,
+                Avalonia.Input.Key.OemTilde => 0xC0,
+                Avalonia.Input.Key.Back => 0x08,
+                Avalonia.Input.Key.Escape => 0x1B,
+                
+                Avalonia.Input.Key.LeftCtrl => 0xA2,
+                Avalonia.Input.Key.LeftShift => 0xA0,
+                Avalonia.Input.Key.LeftAlt => 0xA4,
+                Avalonia.Input.Key.LWin => 0x5B,
+                Avalonia.Input.Key.RightCtrl => 0xA3,
+                Avalonia.Input.Key.RightShift => 0xA1,
+                Avalonia.Input.Key.RightAlt => 0xA5,
+                Avalonia.Input.Key.RWin => 0x5C,
+                
+                Avalonia.Input.Key.Left => 0x25,
+                Avalonia.Input.Key.Right => 0x27,
+                Avalonia.Input.Key.Down => 0x28,
+                Avalonia.Input.Key.Up => 0x26,
+                
+                _ => 0xFFFF // Unknown
+            };
+        }
+
         // macOS native keycodes (CGKeyCode)
         return key switch
         {

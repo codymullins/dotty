@@ -8,7 +8,7 @@ namespace Dotty;
 
 public static unsafe partial class LibGhostty
 {
-    private const string LibraryName = "Native/libghostty.dylib";
+    private const string LibraryName = "ghostty";
 
     [LibraryImport(LibraryName)]
     public static partial int ghostty_init(nuint argc, byte** argv);
@@ -100,7 +100,8 @@ public enum GhosttyPlatformTag : uint
 {
     Invalid = 0,
     MacOS = 1,
-    iOS = 2
+    iOS = 2,
+    Windows = 3
 }
 
 [StructLayout(LayoutKind.Explicit)]
@@ -108,6 +109,7 @@ public struct GhosttyPlatformUnion
 {
     [FieldOffset(0)] public IntPtr nsview;
     [FieldOffset(0)] public IntPtr uiview;
+    [FieldOffset(0)] public IntPtr hwnd;
 }
 
 public enum GhosttyInputAction : uint
