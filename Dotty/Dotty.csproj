@@ -34,6 +34,10 @@
     <Exec Command="git submodule update --init" WorkingDirectory="$(MSBuildProjectDirectory)\.." />
   </Target>
 
+  <!-- Clean the zig-cache to prevent intermittent Windows file locking errors -->
+  <Target Name="CleanGhosttyWindows" BeforeTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\..\ghostty_src\.zig-cache" />
+  </Target>
   <!-- Pre-build steps to compile the native Zig libghostty library -->
   <Target Name="BuildGhosttyMac" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
     <Exec Command="zig build -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)/../ghostty_src" />
