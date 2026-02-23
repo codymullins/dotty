@@ -482,5 +482,4 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
-ghostty_src/
 Native/libghostty.dylib
