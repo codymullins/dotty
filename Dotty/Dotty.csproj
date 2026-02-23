@@ -8,13 +8,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Optional: Limit Zig parallel build jobs to prevent OOM/Quota errors on large C/C++ dependencies. 
-         Can be passed via dotnet build -p:GhosttyZigJobs=N -->
-    <GhosttyZigJobsArg Condition="'$(GhosttyZigJobs)' != ''">-j$(GhosttyZigJobs)</GhosttyZigJobsArg>
-    <GhosttyZigJobsArg Condition="'$(GhosttyZigJobs)' == ''"></GhosttyZigJobsArg>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Include="Native\libghostty.dylib" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,32 +28,4 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-
-  <!-- Ensure the ghostty submodule is initialized before building it -->
-  <Target Name="InitSubmodules" BeforeTargets="BuildGhosttyMac;BuildGhosttyWindows;BuildGhosttyLinux" Condition="!Exists('$(MSBuildProjectDirectory)\..\ghostty_src\build.zig') AND !Exists('$(MSBuildProjectDirectory)/../ghostty_src/build.zig')">
-    <Exec Command="git submodule update --init" WorkingDirectory="$(MSBuildProjectDirectory)\.." />
-  </Target>
-
-  <!-- Clean the zig-cache to prevent intermittent Windows file locking errors -->
-  <Target Name="CleanGhosttyWindows" BeforeTargets="Clean" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <RemoveDir Directories="$(MSBuildProjectDirectory)\..\ghostty_src\.zig-cache" />
-  </Target>
-  <!-- Pre-build steps to compile the native Zig libghostty library -->
-  <Target Name="BuildGhosttyMac" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-    <Exec Command="zig build $(GhosttyZigJobsArg) -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)/../ghostty_src" />
-    <MakeDir Directories="$(MSBuildProjectDirectory)/Native" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../ghostty_src/zig-out/lib/libghostty.dylib" DestinationFolder="$(MSBuildProjectDirectory)/Native" />
-  </Target>
-
-  <Target Name="BuildGhosttyWindows" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <Exec Command="zig build $(GhosttyZigJobsArg) -Dtarget=x86_64-windows -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)\..\ghostty_src" />
-    <MakeDir Directories="$(MSBuildProjectDirectory)\Native" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\ghostty_src\zig-out\lib\ghostty.dll" DestinationFolder="$(MSBuildProjectDirectory)\Native" />
-  </Target>
-
-  <Target Name="BuildGhosttyLinux" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <Exec Command="zig build $(GhosttyZigJobsArg) -Dapp-runtime=none" WorkingDirectory="$(MSBuildProjectDirectory)/../ghostty_src" />
-    <MakeDir Directories="$(MSBuildProjectDirectory)/Native" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)/../ghostty_src/zig-out/lib/libghostty.so" DestinationFolder="$(MSBuildProjectDirectory)/Native" />
-  </Target>
 </Project>
